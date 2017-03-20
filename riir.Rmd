@@ -1,0 +1,413 @@
+---
+title: "An investigative study on filtering"
+output:
+  html_notebook: default
+  word_document: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.
+
+The whole lot of words are treated in english
+
+
+Hereby I listed some functions using the markdown language for the filtering functions.
+
+##The moving average equation
+$$\hat{x} = \mathcal L(y)$$
+
+$$\hat{x}_t = \sum_{i=-\infty}^{\infty} \mathcal L_{t, t-i}y_{t-i}$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1} \mathcal L_{i}y_{t-i}$$
+
+$$\mathcal L_i = \frac{1}{n}\mathbf{1}\left\{
+{i < n}
+\right\}$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1}\mathcal L_i \mathbf{L^i} y_t$$
+
+with the lag operator $\mathbf{L}$ is satisfying $\mathbf{L}y_t=y_{t-1}$
+
+##Measuring the trend and its derivative
+
+$$\frac{d \mathcal S_t}{\mathcal S_t} = \mu_t \mathop{d}t + \sigma_t d W_t$$
+$$\frac{d S_t}{S_t} = \mu_t \mathop{d}t + \sigma_t d W_t$$
+
+$$R_t = \left(\ \mu_t - \frac{1}{2}\sigma_t^2 \right)\Delta + \sigma_t\sqrt{\Delta}\eta_t$$
+where
+$$t_{i+1} - t_i = \Delta$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1} \mathcal L_{i}y_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{1}{\Delta}\sum_{i=0}^{n-1} \mathcal L_{i}R_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{1}{\Delta}\sum_{i=0}^{n-1} \mathcal l_{i}y_{t-i}$$
+
+$$
+\mathcal l_i = 
+\begin{cases}
+ \mathcal L_0 & if&i=0 \\
+ \mathcal L_i - \mathcal L_{i-1} & if&i=1, ..., n-1\\
+ -\mathcal L_{n-1} & if&i=n
+\end{cases}
+$$
+
+$$\hat{x}_t = \frac{d}{\mathop{d}t}\hat{x}_t$$
+
+$$\mu_t = \frac{1}{2}\sigma_t^2 + \frac{1}{\Delta}\sum_{i=0}^{n-1}\mathcal L_i R_{t-i}$$
+
+##Moving average filters
+$$\mathcal L_i = \frac{1}{n}\mathbf{1}\left\{
+{i < n}\right\}$$
+
+$$T = n\Delta$$
+
+$$T \to 0$$
+
+$$\delta_t$$
+
+$$\hat{x}_t = \frac{1}{n}\sum_{i=0}^{n-1}x_{t-i}$$
+
+$$\mathcal l_i = \frac{1}{n\Delta}\left(\delta_{i,0} - \delta_{i,n} \right)$$
+
+##Moving average crossovers
+$$\hat{y}_t^n = \frac{1}{n}\sum_{i=0}^{n-1}y_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{2}{(n_1-n_2)\Delta}\left(\hat{y}_t^{n_2}-\hat{y}_t^{n_1}\right)$$
+
+$$\mathbb{E}\left[\hat{y}_t^{n_2}-\hat{y}_t^{n_1}\right] = \frac{n_1-n_2}{2}\left(\mu-\frac{1}{2}\sigma_t^2\right)\Delta$$
+
+$$\mathcal l_i = \frac{4}{n^2}sgn\left(\frac{n}{2}-i\right)$$
+
+$$\mathcal L_i = \frac{4}{n^2}\left(\frac{n}{2}-\left|i-\frac{n}{2}\right|\right)$$
+
+$$\mathcal L_i = \frac{2}{n^2}\left(n-i\right)\mathbf{1}\left\{{i < n}\right\}$$
+
+$$\mathcal l_i=\frac{2}{n}\left(\delta_i - \mathbf{1}\left\{{i < n}\right\} \right)$$
+
+$$\hat{\mu}_t=\frac{2}{n}\left(x_t-\frac{1}{n}\sum_{i=0}^{n-1}x_{t-i} \right)$$
+
+$$\frac{d^L}{\mathop{d}x}f(x)=\lim_{\epsilon \to 0} \frac{3}{2\epsilon^3}\int_{-\epsilon}^{\epsilon}tf(x+t)\mathop{d}t$$
+
+$$\frac{d^L}{\mathop{d}x}f(x)=\lim_{\epsilon \to 0}\frac{\sum\nolimits_{k=-n}^{n}kf(x+kh)}{2\sum\nolimits_{k=1}^{n}k^2h}$$
+
+$$\frac{d^L}{\mathop{d}t} \hat{x}=\frac{12}{n^3}\sum_{i=0}^{n}\left(\frac{n}{2}-i\right)y_{t-i}$$
+
+$$\mathcal l_i = \frac{12}{n^3}\left(\frac{n}{2}-i\right)\mathbf{1}\left\{{0 \leq i \leq n}\right\}$$
+
+$$\mathcal L_i = \frac{6}{n^3}i\left(n-i\right)\mathbf{1}\left\{{0 \leq i \leq n}\right\}$$
+
+
+$$\left\{\hat{x}_1,...,\hat{x}_n\right\}=\arg\min \frac{1}{2}\sum_{t=1}^{n}\left(y_t-\hat{x}_t\right)^2$$
+
+$$x_t=x_{t-1} + \mu$$
+
+$$y_t=\mu_t+\epsilon_t$$
+
+$$\hat{\mu}=\frac{\sum\nolimits_{t=1}^{n}ty_t}{\sum\nolimits_{t=1}^{n}t^2}$$
+
+##The objective function:
+$$\frac{1}{2}\sum_{t=1}^{n}\left(y_t-\hat{x}_t\right)^2+\lambda\sum_{t=2}^{n-1}\left(\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right)^2$$
+
+$$ \frac{1}{2}\left\lVert y-\hat{x} \right\rVert_2^2 + \lambda \left\lVert D\hat{x}\right\rVert_2^2$$
+
+$$D=\left(
+\begin{array}{cc}
+1 & -2 & 1 & & & & &\\
+  & 1 & -2 & 1\\
+ & & & \ddots\\
+ &&&&1&-2&1\\
+ &&&&&1&2&1
+\end{array}\right)$$
+
+
+$$\hat{x}=\left(I+2\lambda D^TD\right)^{-1}y$$
+
+$$\begin{cases}
+R_t=\mu_t+\sigma_{\zeta}\zeta_t\\
+\mu_t=\mu_{t-1}+\sigma_{\eta}\eta_t
+\end{cases}$$
+
+$$\hat{\mu}_{t|t-1}=\mathbb{E}_{t-1}\left[\mu_t\right]$$
+
+$$P_{t|t-1}=\mathbb{E}_{t-1}\left[\left(\hat{\mu}_{t|t-1}-\mu_t\right)^2\right]$$
+
+$$\hat{\mu}_{t+1|t}=(1-K_t)\hat{\mu}_{t|t-1}+K_tR_t$$
+where
+$$K_t=\frac{P_{t|t-1}}{P_{t|t-1}+\sigma_{\zeta}^2}$$
+
+$$\hat{\mu}_{t+1|t}=(1-\kappa)\hat{\mu}_{t|t-1}+\kappa R_t$$
+
+$$\kappa=\frac{2\sigma_{\eta}}{\sigma_{\eta}+\sqrt{\sigma_{\eta}^2+4\sigma_{\zeta}^2}}$$
+
+$$\lambda =-\ln(1-\kappa)$$
+
+$$\hat{\mu}_t =\left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i} R_{t-i}$$
+
+$$\hat{x}_t = \left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i}y_{t-i}$$
+
+$$\hat{\mu}_t=\left(1-e^{-\lambda}\right) y_t - \left(1-e^{-\lambda}\right)\left(e^{\lambda}-1\right)\sum_{i=1}^{\infty}e^{-\lambda i} y_{t-i}$$
+
+$$\left\lceil\left( \frac{1}{\lambda} - \frac{1}{2} \right) \ln{2}\right\rceil$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+\mu_t=x_{t-1}+\mu
+\end{cases}$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+x_t=x_{t-1} + \mu + \sigma_{\zeta}\zeta_t
+\end{cases}$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+x_t=x_{t-1} + \mu_{t-1} + \sigma_{\zeta}\zeta_t\\
+\mu_{t} = \mu_{t-1} + \sigma_{\eta} \eta_t
+\end{cases}$$
+
+The noise process is:
+$$\begin{array}\\
+\epsilon_t = \mathcal N(0,1)\\
+\eta_t = \mathcal N(0,1)\\
+\zeta_t = \mathcal N(0,1)
+\end{array}$$
+
+
+##For nonlinear filtering.
+$$\begin{align}y_t & \,=\, f(t) \,+\, \epsilon_t \\& \,=\, \beta_0(\tau) \,+\, \sum_{j=1}^{p}\beta_j(\tau)(\tau \, - t)^j \,+\,\epsilon_t\ \\\end{align}$$
+
+$$\omega_t \,=\,\mathcal K \left( \frac{\tau - t}{h} \right) $$
+
+$$\hat{x}_t = \mathbb{E}\left[y_t |\tau=t\right] = \hat{\beta}_0(t)$$
+
+First we calculate the residual $\hat{\epsilon_t}$
+
+The we compute $\delta_t \,=\, (1 - \mu_t^2) \cdot 1\{|\mu_t \leq 1|\}$ with $\mu_t = \hat{\epsilon}_t / (6\, \text{median}|\hat{\epsilon}|)$ 
+
+Interval $\lceil t, t+1 \lceil$
+
+$$\min_{S \in \mathcal{SP}}(1-h) \sum_{t=0}^{n} w_t \left(y_t - S(t)\right)^2 + h\int_0^T w_tS''(\tau)^2 \mathop{d}\tau $$
+with the condition that
+$$\hat{x}=S(t)=y_t$$
+
+$$\hat{x}_t = S(t)=\hat{c} + \hat{\mu}t$$
+
+another condition is $(\hat{c}, \hat{\mu}£©$
+because the optimum is reached for $S''(\tau)$
+
+##L1 filtering
+
+$$\frac{1}{2} \sum_{t=1}^{n} \left(y_t - \hat{x}_t\right)^2 \,+\,\lambda \sum_{t=2}^{n-1}\left|\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right|$$
+The vectorial form is:
+$$\frac12 \left\lVert y-\hat{x} \right\rVert_2^2 \,+\,\lambda \left\lVert D\hat{x} \right\rVert_1  $$
+
+##Wavelet filtering
+$$y(\omega)=\sum_{t=1}^n y_t e^{-iwt} $$
+
+We note $y(\omega) = \mathcal F(y)$, so that $y = \mathcal{F}^{-1}(y)$
+
+wavelat coefficients $\omega=\mathcal W(y)$
+
+With a denoising rule $D$:
+$$\omega^* = D(\omega)$$
+
+$$x=\mathcal W^{-1}\left(\omega^*\right)$$
+
+Let $\omega^-$, $\omega^+$ be two scalars with $0<\omega^-<\omega^+$
+
+
+* Hard Shrinkage
+
+$$\omega_i^* = \omega_i \cdot \mathbb{1}\left\{ \left|\omega_i\right| > \omega^+ \right\}$$
+
+* Soft Shrinkage
+
+$$\omega_i^* = \text{sgn}(\omega_i) \cdot \left( \left|\omega_i\right| - \omega^+  \right)_+ $$
+
+* Semi-soft shrinkage
+
+$$ \omega_i^* = 
+\begin{cases}
+0 & \text{si} \, |\omega_i| \leq \omega^-\\
+\text{sgn}(\omega_i)(\omega^+-\omega^-)^{-1}\omega^+(|\omega_i|-\omega^-) &  \text{si} \,\, \omega^-<|\omega_i| \leq \omega^+ \\
+\omega_i & \text{si} \, |\omega_i| > \omega^+
+\end{cases}$$
+
+
+* Quantile shrinkage is a hard shrinkage method where $\omega^+$ is the $q^{th}$ quantile of the coefficients $|\omega_i|$
+
+##Multivariate filtering
+
+$$\left(
+\begin{array}{ccc}
+y_t^{(1)}\\
+\vdots\\
+y_t^{(m)}
+\end{array}\right) = x_t + 
+\left(
+\begin{array}{ccc}
+\epsilon_t^{(1)}\\
+\vdots\\
+\epsilon_t^{(m)}
+\end{array}\right)$$
+
+where $y_t^{(j)}$ and $\epsilon_t^{(j)}$ is the signal and noise.
+
+$$\hat{x}_t = \frac1m \sum_{j=1}^m \hat{x}_t^{(j)}$$
+The average filter $\bar{y}_t = \frac1m \sum\nolimits_{j=1}^{m}y_t^{(j)}$
+
+We note $y_t^{(j)} \sim I(1)$ and $(1-L)y_t^{(j)} \sim I(0)$.
+
+Let's now define $y_t = \left(y_t^{(1)},...,y_t^{(m)}\right)$
+
+We note that $z_t = \beta^{\intercal}y_t \sim I(0)$
+
+Error correction model:
+$$\Delta y_t = \gamma z_{t-1} \,+\, \sum_{i=1}^{\infty}\Phi_i \Delta y_{t-i} + \zeta_t$$
+
+$$y_t = Af_t + \eta_t  $$
+
+$$y_t = P_t+T_t$$
+
+$$f_t=\check{\gamma}^{\intercal}y_t$$
+where $\check{\gamma}^{\intercal}\gamma=0$
+
+$$\
+\begin{align}
+\hat{x}_t & \,=\, \frac1m \sum_{j=1}^{m} \sum_{i=0}^{n-1} \mathcal{L}_i y_{t-i}^{(j)} \\    
+&\,=\, \sum_{i=0}^{n-1} \mathcal{L}_i \left( \frac1m \sum_{j=1}^m y_{t-i}^{(j)} \right) \\
+&\,=\, \sum_{i=0}^{n-1} \mathcal L_i \bar{y}_{t-i}
+\end{align}$$
+
+
+###Common Stochastic Trend Model
+$$\begin{cases}
+y_t = \alpha x_t + \epsilon_t\\
+x_t = x_{t-1} + \mu_{t-1} + \sigma_{\zeta} \zeta\\
+\mu_t = \mu_{t-1} + \sigma_{\eta} \eta_t
+\end{cases}$$
+
+with $y_t=\left(y_t^{(1)},...,y_t^{(m)}\right), \epsilon_t=\left(\epsilon_t^{(1)},...,\epsilon_t^{(m)}\right) \sim \mathcal{N}(0, \Omega)$
+
+$\zeta_t \sim \mathcal{N}(0,1)$ and $\eta_t \sim \mathcal{N}(0,1)$
+
+## Calibration Problem
+###calibrate base on prediction error
+We may estimate the set of parameters $(\sigma_{\epsilon}, \sigma_{\zeta}, \sigma_{\eta})$ by maximizing the log-likelihood function.
+
+$$\ell = \frac12 \sum_{t=1}^n \ln 2\pi + \ln F_t + \frac{v_t^2}{F_t} $$
+where $v_t=y_t-\mathbb{E}_{t-1}[y_t] $ is the innovation process and $F_t = \mathbb{E}_{t-h}\left[v_t^2 \right] $
+
+Another way is to consider the log-likelihood function in frequency domain analysis. The stationary formof $y_t$ is $S(t)=(1-L)^2 y_t$.
+The associated log-likelihood function is:
+$$\ell= -\frac2n \ln 2\pi - \frac12 \sum_{j=0}^{n-1} \ln f(\lambda_j) - \frac12 \sum_{j=0}^{n-1} \frac{I(\lambda_j)}{f(\lambda_j)}$$
+where $I(\lambda_j)$ is the periodogram of $S(y_t)$ and $f(\lambda)$ is the spectral density:
+$$f(y_t)=\frac{\sigma_{\eta}^2 + 2(1-\cos \lambda)\sigma_{\zeta}^2+4(1-\cos \lambda)^2 \sigma_{\epsilon}^2 }{2\pi}$$
+because we have:
+$$S(y_t)=\sigma_{\eta}\eta_{t-1} + \sigma_{\zeta}(1-L)\zeta_t + \sigma_{\epsilon}(1-L)^2 \epsilon_t $$
+
+$$e(\theta; h) = \sum_{t=1}^{n-h} \left( y_t - \mathbb{E}_{t-h}[y_t] \right)^2 $$
+
+###Calibration based on benchmark estimator
+$$f^{MA}(\omega) = \frac1{n^2} \left| \sum_{t=0}^{n-1} e^{-iwt} \right|^2 $$
+
+$$f^{HP}(\omega) =  \left(\frac1{1 + 4\lambda \left(3 - 4\cos\omega + cos2\omega \right)}  \right)^2 $$
+
+$$\lambda \propto \lambda_* = \frac12 \left( \frac{n}{2\pi} \right)^4 $$
+
+$$\text{MSE}(\hat{\mu}) = \mathbb{E} \left[(\hat{\mu} - \mathbb{E[\hat{\mu_t}])^2} \right] + \mathbb{E} \left[(\mathbb{E}[\hat{\mu}_t]-\mu_t^0)\right]^2 $$
+
+$$\mathop{d}S_t = \mu^0 S_t \mathop{d}t + \sigma^0S_t\mathop{d}W_t $$
+
+###Trend detection vs trend filtering
+$$\mathbb{S}_t^{(n)} = \sum_{i=0}^{n-2} \sum_{j=i+1}^{n-1} \text{sgn} (y_{t-i}-y_{t-j}) $$
+
+$$\text{var}\left(\mathbb{S}_t^{(n)} \right) =\frac{n(n-1)(2n+5)}{18}  $$
+We can show that:
+$$-\frac{n(n+1)}{2} \leq \mathbb{S}_t^{(n)} \leq \frac{n(n+1)}{2} $$
+
+Normalise the score we have
+$$\mathcal{S}_t^{(n)} = \frac{2\mathbb{S}_t^{(n)}}{n(n+1)} $$
+Obviously that $\mathbb{S}\simeq 0$
+
+$$Z_t^{(n)} \stackrel{\longrightarrow}{n\rightarrow\infty} \mathcal N(0,1) $$
+with
+$$Z_t^{(n)} = \frac{\mathbb{S}_t^{(n)}}{\sqrt{\text{var} \left(\mathbb{S}_t^{(n)} \right) }} $$
+$$\text{var} \left(\mathbb{S}_t^{(n)} \right) = \frac1{18} \left( n(n+1)(2n+5) - \sum_{k=1}^g n_k(n_k -1 )(2n_k + 5) ) \right) $$
+
+
+
+##Kalman Filter notes
+The process model is described as
+$$x_{t+1} = Fx_k+Gu_k+w_k$$
+where $x_k, x_{k+1}$ is the system state(vector) at time k, k+1. F is the system transition matrix.
+$G$ is the gain of control $u_k$ and $w_k$ is the zero-mean Gaussian process noise $w_k /sim N(0,Q)$
+
+The initial $x_0$ is assumed to follow the zero-mean Gaussian process noise $x_0 /sim N(\hat{x}_0, P_0) $. We then estimate the state at each time step by the process model and the observations.
+
+The observation model at time $k+1$ is given by:
+$$z_{k+1} = Hx_{k+1} + v_{k+1}$$
+where $H$ is the observation matrix and $v_{k+1}$ is the zero-mean Gaussian observation noise $v_{k+1} \sim N(0, R)$
+
+Suppose the knowledge on $x_{k+1}$ at time $t+1$ follows
+$$x_{k+1} \sim N(\hat{x}_{k+1}, P_{k+1})$$
+
+*Predict* using the process model:
+$$\bar{x}_{k+1} = F\hat{x}_k + Gu_k $$
+$$\bar{P}_{k+1} = FP_kF^{\intercal} + Q $$
+
+*Update* using observation:
+$$\hat{x}_{k+1} = \bar{x}_{k+1}+ K(z_{k+1} - H\bar{x}_{k+1}) $$
+$$P_{k+1} =\bar{P}_{k+1} - KSK^{\intercal} $$
+
+Where the innovation process is given by:
+$$S=H\bar{P}_{k+1}H^{\intercal} + R $$
+$$K= \bar{P}_{k+1} H^{\intercal}S^{-1} $$
+
+At time $k$, the estimate of $x_k$ is a Gaussian distribution $x_k \sim N(F\hat{x}_k, FP_kF^{\intercal})$
+
+In general case, $H$ is a arbitrary, $H^{-1}$ may not exist but we still have the formula of the information matrix from observation
+$$I_{obs} = H^{\intercal} R^{-1} H$$
+$$\hat{x}_{k+1} = I_{total}^{-1} I_{prior} \bar{x}_{k+1} + I_{total}^{-1} H^{\intercal} R^{-1} z_{k+1} $$
+
+
+##Kalman Filtering
+We assume a simplified model as:
+$$\begin{cases}
+R_t = \mu_t + \sigma_{\zeta}\zeta_t\\
+\mu_t = \mu_{t-1} + \sigma_{\eta}\eta_t
+\end{cases}$$
+
+
+------------------------------------
+$\alpha$        90%    95%     99%
+------------- ------ ------- -------
+  n=10 days   58.06% 49.47%  29.37%
+  
+  n=3 months  85.77% 82.87%  76.68%
+  
+  n=1 year    97.17% 96.78%  95.33%
+------------------------------------
+
+-------------------------------------------
+Trend       Positive  Negative  Difference  
+----------- --------- --------- -----------
+Eurostoxx50    1.1%      0.2%      0.9%
+
+S&P500         0.9%      0.5%      0.4%
+
+MSCI WORLD     0.6%     -0.3%      1.0%
+
+MSCI EM        1.9%     -0.3%      2.2%
+
+TOPIX          0.4%     -0.4%      0.9%
+
+EUR/USD        0.2%     -0.2%      0.4%
+
+USD/JPY        0.2%     -0.2%      0.4%
+
+GSCI           1.3%     -0.4%      1.6%
+
+-------------------------------------------

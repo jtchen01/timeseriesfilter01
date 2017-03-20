@@ -1,0 +1,463 @@
+---
+title: "Filtering for momentum strategy"
+author: "Cheng Sun N12763646,  Jingtao Chen N15309130"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Momentum
+
+Two very popular trading strategy, together with technical analysis of financial price movement, lies two very important property:
+
+- Mean Reversion
+- Momentum
+
+In this study we focus on the momentum strategy, and to get the momentum, we would like to obtain the trend of a time series.
+
+
+## Trend
+
+"The trend of a tim eseries is considered to be the component containing the global change, which contrasts with local changes due to noise." -- Paper
+
+Therefore, the trend filtering procedure concerns both noise-canceling and dynamics of the underlying process.
+
+We define the trend of prices, as a price without noise, as follows
+$$\hat{x}_t = \sum_{i=0}^{n-1} \mathcal L_{i}y_{t-i}$$
+$y_t$ is the log of price.
+
+
+
+
+## Types of filter
+
+1. Linear filter
+    + Moving Average Filter
+    + Moving Average Crossover
+    + Least Square: L2 filter, Kalman filter
+
+2. Nonlinear filter
+    + Nonparametric regression: Loess regression, Spline regression
+    + L1 filter
+    + Wavelet filter
+
+
+## Assumption of price
+
+We assume the price follows a lognormal distribution.
+$$\frac{d S_t}{S_t} = \mu_t \mathop{d}t + \sigma_t d W_t$$
+
+Then we can define the return as:
+
+$$R_t = \left(\ \mu_t - \frac{1}{2}\sigma_t^2 \right)\Delta + \sigma_t\sqrt{\Delta}\eta_t$$
+$\mu_t$ is often regarded as the trend of price returns. 
+
+In this manner, we can easily convert between the trend of log-price and price returns.
+
+
+## Moving Average Filter
+
+In moving average filter, the filter function is defined as followed:
+
+$$\mathcal L_i = \frac{1}{n}\mathbf{1}\left\{{i < n}\right\}$$
+
+For the return, we have
+$$\hat{\mu}_t \simeq \frac{1}{\Delta}\sum_{i=0}^{n-1} \mathcal L_{i}R_{t-i}$$
+
+## Moving Average Crossover
+
+A moving average with window length of *n* is
+$$\hat{y}_t^n = \frac{1}{n}\sum_{i=0}^{n-1}y_{t-i}$$
+
+For two moving average with varied window length, the trend of return can be obtained
+$$\hat{\mu}_t \simeq \frac{2}{(n_1-n_2)\Delta}\left(\hat{y}_t^{n_2}-\hat{y}_t^{n_1}\right)$$
+
+With the trend of return, the trend of price can be computed as
+$$\hat{x}_t = x_{t-1} +\hat{\mu}_t$$
+
+## L2 filter
+First we assume the trend of return is a constant. Then we will have the system:
+$$x_t = x_{t-1} + \mu\\y_t = \mu t + \epsilon_t$$
+
+Then estimating the trend $\hat{x}_t$ is also equivalent to estimating the coefficient $\mu$
+$$\hat{\mu}=\frac{\sum\nolimits_{t=1}^{n}ty_t}{\sum\nolimits_{t=1}^{n}t^2}$$
+
+## L2 filter, cont'd 1
+Then if we consider the $\mu$ is not constant, we can define the following objective function, as a tradeoff between errors and smoothness.
+$$\frac{1}{2}\sum_{t=1}^{n}\left(y_t-\hat{x}_t\right)^2+\lambda\sum_{t=2}^{n-1}\left(\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right)^2$$
+
+In vectorial form it is
+$$ \frac{1}{2}\left\lVert y-\hat{x} \right\rVert_2^2 + \lambda \left\lVert D\hat{x}\right\rVert_2^2$$
+
+## L2 filter, cont'd 2
+
+where
+$$D=\left(
+\begin{array}{cc}
+1 & -2 & 1 & & & & &\\
+  & 1 & -2 & 1\\
+ & & & \ddots\\
+ &&&&1&-2&1\\
+ &&&&&1&2&1
+\end{array}\right)$$
+
+Then it can be rewritten as
+$$\hat{x}=\left(I+2\lambda D^TD\right)^{-1}y$$
+
+
+## Kalman filter
+
+The dynamic of the system can be expressed as
+$$\begin{cases}R_t=\mu_t+\sigma_{\zeta}\zeta_t\\\mu_t=\mu_{t-1}+\sigma_{\eta}\eta_t\end{cases}$$
+
+The estimation of $R_t$ can be defined as
+$$\hat{\mu}_{t|t-1}=\mathbb{E}_{t-1}\left[\mu_t\right]$$
+
+Another coefficient is defined as
+$$P_{t|t-1}=\mathbb{E}_{t-1}\left[\left(\hat{\mu}_{t|t-1}-\mu_t\right)^2\right]$$
+
+## Kalman filter, cont'd 1
+
+Therefore we can define that
+$$\hat{\mu}_{t+1|t}=(1-K_t)\hat{\mu}_{t|t-1}+K_tR_t$$
+in which
+$$K_t=\frac{P_{t|t-1}}{P_{t|t-1}+\sigma_{\zeta}^2}$$
+
+In practice, one method of solving the equation is
+$$\hat{\mu}_{t+1|t}=(1-\kappa)\hat{\mu}_{t|t-1}+\kappa R_t$$
+
+where$\kappa=\frac{2\sigma_{\eta}}{\sigma_{\eta}+\sqrt{\sigma_{\eta}^2+4\sigma_{\zeta}^2}}$
+
+## Kalman filter, cont'd 2
+If we wrote the formula as this, we can have $\lambda =-\ln(1-\kappa)$
+
+Then the prediction of this single time series can be written as
+$$\hat{\mu}_t =\left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i} R_{t-i}$$
+And the trend of log-price is
+$$\hat{x}_t = \left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i}y_{t-i}$$
+
+## Loess regression
+For the local polynomial regression
+$$\begin{align}y_t & \,=\, f(t) \,+\, \epsilon_t \\& \,=\, \beta_0(\tau) \,+\, \sum_{j=1}^{p}\beta_j(\tau)(\tau \, - t)^j \,+\,\epsilon_t\ \\\end{align}$$
+
+we use it to get the residuals $\hat{\epsilon_t}$, then we compute $\delta_t \,=\, (1 - \mu_t^2) \cdot 1\{|\mu_t|\leq 1\}$ with $\mu_t = \hat{\epsilon}_t / (6\, \text{median}|\hat{\epsilon}|)$ 
+and run a second kernel regression with weightings $\delta_t w_t$
+
+## L1 filter
+Similar to the L2 filter, and inspired by the LASSO regression, we now consider the L1 term to be a smoothness penalty function.
+The objective function can then be written as
+$$\frac{1}{2} \sum_{t=1}^{n} \left(y_t - \hat{x}_t\right)^2 \,+\,\lambda \sum_{t=2}^{n-1}\left|\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right|$$
+
+The equivalent vectorial form is
+$$\frac12 \left\lVert y-\hat{x} \right\rVert_2^2 \,+\,\lambda \left\lVert D\hat{x} \right\rVert_1  $$
+
+## Wavelet filter
+The fourier transformation allows us to consider original signal as a combination of frequency functions
+$$y(\omega)=\sum_{t=1}^n y_t e^{-iwt} $$
+
+To avoid difficulties when trend reverses, we will have Wavelet filter, which takes into consideration both frequency and time.
+
+## Wavelet filter, cont'd 1
+
+1. First we compute the wavelet transformation $\mathcal W$ of $y_t$ and get wavelet coefficients $\omega = \mathcal W(y)$
+
+2. We apply a denoising rule $D$:
+$$\omega^* = D(\omega)$$
+
+3. Use the inverse Wavelet transformation $\mathcal W^{-1}$ we get
+$$x=\mathcal W^{-1}\left(\omega^*\right)$$
+
+
+## Wavelet filter, cont'd 2
+The shrinkage methods includes:
+Let $\omega^-$, $\omega^+$ be two scalars with $0<\omega^-<\omega^+$
+
+
+* Hard Shrinkage
+
+$$\omega_i^* = \omega_i \cdot \mathbb{1}\left\{ \left|\omega_i\right| > \omega^+ \right\}$$
+
+* Soft Shrinkage
+
+$$\omega_i^* = \text{sgn}(\omega_i) \cdot \left( \left|\omega_i\right| - \omega^+  \right)_+ $$
+
+* Semi-soft shrinkage
+
+$$ \omega_i^* = 
+\begin{cases}
+0 &  \, |\omega_i| \leq \omega^-\\
+\text{sgn}(\omega_i)(\omega^+-\omega^-)^{-1}\omega^+(|\omega_i|-\omega^-) &  \,\, \omega^-<|\omega_i| \leq \omega^+ \\
+\omega_i &  \, |\omega_i| > \omega^+
+\end{cases}$$
+
+
+* Quantile shrinkage is a hard shrinkage method where $\omega^+$ is the $q^{th}$ quantile of the coefficients $|\omega_i|$
+<!-- ## Filtering and Momentum strategy -->
+
+<!-- This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. -->
+
+<!-- When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. -->
+
+
+## The moving average equation
+
+$$\hat{x} = \mathcal L(y)$$
+
+$$\hat{x}_t = \sum_{i=-\infty}^{\infty} \mathcal L_{t, t-i}y_{t-i}$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1} \mathcal L_{i}y_{t-i}$$
+
+$$\mathcal L_i = \frac{1}{n}\mathbf{1}\left\{{i < n}
+\right\}$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1}\mathcal L_i \mathbf{L^i} y_t$$
+
+with the lag operator $\mathbf{L}$ is satisfying $\mathbf{L}y_t=y_{t-1}$
+
+
+## Measuring the trend and its derivative
+
+$$\frac{d \mathcal S_t}{\mathcal S_t} = \mu_t \mathop{d}t + \sigma_t d W_t$$
+$$\frac{d S_t}{S_t} = \mu_t \mathop{d}t + \sigma_t d W_t$$
+
+$$R_t = \left(\ \mu_t - \frac{1}{2}\sigma_t^2 \right)\Delta + \sigma_t\sqrt{\Delta}\eta_t$$
+where
+$$t_{i+1} - t_i = \Delta$$
+
+$$\hat{x}_t = \sum_{i=0}^{n-1} \mathcal L_{i}y_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{1}{\Delta}\sum_{i=0}^{n-1} \mathcal L_{i}R_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{1}{\Delta}\sum_{i=0}^{n-1} \mathcal l_{i}y_{t-i}$$
+
+$$
+\mathcal l_i = 
+\begin{cases}
+ \mathcal L_0 & if&i=0 \\
+ \mathcal L_i - \mathcal L_{i-1} & if&i=1, ..., n-1\\
+ -\mathcal L_{n-1} & if&i=n
+\end{cases}
+$$
+
+$$\hat{x}_t = \frac{d}{\mathop{d}t}\hat{x}_t$$
+
+$$\mu_t = \frac{1}{2}\sigma_t^2 + \frac{1}{\Delta}\sum_{i=0}^{n-1}\mathcal L_i R_{t-i}$$
+
+
+## Moving average filters
+
+$$\mathcal L_i = \frac{1}{n}\mathbf{1}\left\{ {i < n}\right\}$$
+
+$$T = n\Delta$$
+
+$$T \to 0$$
+
+$$\delta_t$$
+
+$$\hat{x}_t = \frac{1}{n}\sum_{i=0}^{n-1}x_{t-i}$$
+
+$$\mathcal l_i = \frac{1}{n\Delta}\left(\delta_{i,0} - \delta_{i,n} \right)$$
+
+## Moving average crossovers
+$$\hat{y}_t^n = \frac{1}{n}\sum_{i=0}^{n-1}y_{t-i}$$
+
+$$\hat{\mu}_t \simeq \frac{2}{(n_1-n_2)\Delta}\left(\hat{y}_t^{n_2}-\hat{y}_t^{n_1}\right)$$
+
+$$\mathbb{E}\left[\hat{y}_t^{n_2}-\hat{y}_t^{n_1}\right] = \frac{n_1-n_2}{2}\left(\mu-\frac{1}{2}\sigma_t^2\right)\Delta$$
+
+$$\mathcal l_i = \frac{4}{n^2}sgn\left(\frac{n}{2}-i\right)$$
+
+$$\mathcal L_i = \frac{4}{n^2}\left(\frac{n}{2}-\left|i-\frac{n}{2}\right|\right)$$
+
+$$\mathcal L_i = \frac{2}{n^2}\left(n-i\right)\mathbf{1}\left\{{i < n}\right\}$$
+
+$$\mathcal l_i=\frac{2}{n}\left(\delta_i - \mathbf{1}\left\{{i < n}\right\} \right)$$
+
+$$\hat{\mu}_t=\frac{2}{n}\left(x_t-\frac{1}{n}\sum_{i=0}^{n-1}x_{t-i} \right)$$
+
+$$\frac{d^L}{\mathop{d}x}f(x)=\lim_{\epsilon \to 0} \frac{3}{2\epsilon^3}\int_{-\epsilon}^{\epsilon}tf(x+t)\mathop{d}t$$
+
+
+## Moving average crossovers(cont'd)
+$$\frac{d^L}{\mathop{d}x}f(x)=\lim_{\epsilon \to 0}\frac{\sum\nolimits_{k=-n}^{n}kf(x+kh)}{2\sum\nolimits_{k=1}^{n}k^2h}$$
+
+$$\frac{d^L}{\mathop{d}t} \hat{x}=\frac{12}{n^3}\sum_{i=0}^{n}\left(\frac{n}{2}-i\right)y_{t-i}$$
+
+$$\mathcal l_i = \frac{12}{n^3}\left(\frac{n}{2}-i\right)\mathbf{1}\left\{{0 \leq i \leq n}\right\}$$
+
+$$\mathcal L_i = \frac{6}{n^3}i\left(n-i\right)\mathbf{1}\left\{{0 \leq i \leq n}\right\}$$
+
+
+$$\left\{\hat{x}_1,...,\hat{x}_n\right\}=\arg\min \frac{1}{2}\sum_{t=1}^{n}\left(y_t-\hat{x}_t\right)^2$$
+
+$$x_t=x_{t-1} + \mu$$
+
+$$y_t=\mu_t+\epsilon_t$$
+
+$$\hat{\mu}=\frac{\sum\nolimits_{t=1}^{n}ty_t}{\sum\nolimits_{t=1}^{n}t^2}$$
+
+## Moving average, the objective function:
+$$\frac{1}{2}\sum_{t=1}^{n}\left(y_t-\hat{x}_t\right)^2+\lambda\sum_{t=2}^{n-1}\left(\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right)^2$$
+
+$$ \frac{1}{2}\left\lVert y-\hat{x} \right\rVert_2^2 + \lambda \left\lVert D\hat{x}\right\rVert_2^2$$
+
+$$D=\left(
+\begin{array}{cc}
+1 & -2 & 1 & & & & &\\
+  & 1 & -2 & 1\\
+ & & & \ddots\\
+ &&&&1&-2&1\\
+ &&&&&1&2&1
+\end{array}\right)$$
+
+
+$$\hat{x}=\left(I+2\lambda D^TD\right)^{-1}y$$
+
+$$\begin{cases}
+R_t=\mu_t+\sigma_{\zeta}\zeta_t\\
+\mu_t=\mu_{t-1}+\sigma_{\eta}\eta_t
+\end{cases}$$
+
+$$\hat{\mu}_{t|t-1}=\mathbb{E}_{t-1}\left[\mu_t\right]$$
+
+$$P_{t|t-1}=\mathbb{E}_{t-1}\left[\left(\hat{\mu}_{t|t-1}-\mu_t\right)^2\right]$$
+
+## Objective function, cont'd
+$$\hat{\mu}_{t+1|t}=(1-K_t)\hat{\mu}_{t|t-1}+K_tR_t$$
+where
+$$K_t=\frac{P_{t|t-1}}{P_{t|t-1}+\sigma_{\zeta}^2}$$
+
+$$\hat{\mu}_{t+1|t}=(1-\kappa)\hat{\mu}_{t|t-1}+\kappa R_t$$
+
+$$\kappa=\frac{2\sigma_{\eta}}{\sigma_{\eta}+\sqrt{\sigma_{\eta}^2+4\sigma_{\zeta}^2}}$$
+
+$$\lambda =-\ln(1-\kappa)$$
+
+$$\hat{\mu}_t =\left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i} R_{t-i}$$
+
+$$\hat{x}_t = \left(1-e^{-\lambda}\right)\sum_{i=0}^{\infty} e^{-\lambda i}y_{t-i}$$
+
+$$\hat{\mu}_t=\left(1-e^{-\lambda}\right) y_t - \left(1-e^{-\lambda}\right)\left(e^{\lambda}-1\right)\sum_{i=1}^{\infty}e^{-\lambda i} y_{t-i}$$
+
+$$\left\lceil\left( \frac{1}{\lambda} - \frac{1}{2} \right) \ln{2}\right\rceil$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+\mu_t=x_{t-1}+\mu
+\end{cases}$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+x_t=x_{t-1} + \mu + \sigma_{\zeta}\zeta_t
+\end{cases}$$
+
+$$\begin{cases}
+y_t=x_t+\sigma_{\epsilon}\epsilon_t\\
+x_t=x_{t-1} + \mu_{t-1} + \sigma_{\zeta}\zeta_t\\
+\mu_{t} = \mu_{t-1} + \sigma_{\eta} \eta_t
+\end{cases}$$
+
+The noise process is:
+$$\begin{array}\\
+\epsilon_t = \mathcal N(0,1)\\
+\eta_t = \mathcal N(0,1)\\
+\zeta_t = \mathcal N(0,1)
+\end{array}$$
+
+## Nonlinear filtering
+$$\begin{align}
+y_t & \,=\, f(t) \,+\, \epsilon_t \\    
+& \,=\, \beta_0(\tau) \,+\, \sum_{j=1}^{p} \beta_j(\tau)(\tau \, - t)^j \,+\,\epsilon_t\ \\
+\end{align}$$
+
+$$\omega_t \,=\,\mathcal K \left( \frac{\tau - t}{h} \right) $$
+
+$$\hat{x}_t = \mathbb{E}\left[y_t |\tau=t\right] = \hat{\beta}_0(t)$$
+
+First we calculate the residual $\hat{\epsilon_t}$
+
+The we compute $\delta_t \,=\, (1 - \mu_t^2) \cdot 1\{|\mu_t \leq 1|\}$ with $\mu_t = \hat{\epsilon}_t / (6\, \text{median}|\hat{\epsilon}|)$ 
+
+Interval $\lceil t, t+1 \lceil$
+
+$$\min_{S \in \mathcal{SP}}(1-h) \sum_{t=0}^{n} w_t \left(y_t - S(t)\right)^2 + h\int_0^T w_tS''(\tau)^2 \mathop{d}\tau $$
+with the condition that
+$$\hat{x}=S(t)=y_t$$
+
+$$\hat{x}_t = S(t)=\hat{c} + \hat{\mu}t$$
+
+another condition is $(\hat{c}, \hat{\mu}£©$
+because the optimum is reached for $S''(\tau)$
+
+
+## L1 filtering
+
+$$\frac{1}{2} \sum_{t=1}^{n} \left(y_t - \hat{x}_t\right)^2 \,+\,\lambda \sum_{t=2}^{n-1}\left|\hat{x}_{t-1}-2\hat{x}_t+\hat{x}_{t+1}\right|$$
+The vectorial form is:
+$$\frac12 \left\lVert y-\hat{x} \right\rVert_2^2 \,+\,\lambda \left\lVert D\hat{x} \right\rVert_1  $$
+
+
+##Wavelet filtering
+$$y(\omega)=\sum_{t=1}^n y_t e^{-iwt} $$
+
+We note $y(\omega) = \mathcal F(y)$, so that $y = \mathcal{F}^{-1}(y)$
+
+wavelat coefficients $\omega=\mathcal W(y)$
+
+With a denoising rule $D$:
+$$\omega^* = D(\omega)$$
+
+$$x=\mathcal W^{-1}\left(\omega^*\right)$$
+
+Let $\omega^-$, $\omega^+$ be two scalars with $0<\omega^-<\omega^+$
+
+
+* Hard Shrinkage
+
+$$\omega_i^* = \omega_i \cdot \mathbb{1}\left\{ \left|\omega_i\right| > \omega^+ \right\}$$
+
+* Soft Shrinkage
+
+$$\omega_i^* = \text{sgn}(\omega_i) \cdot \left( \left|\omega_i\right| - \omega^+  \right)_+ $$
+
+* Semi-soft shrinkage
+
+$$ \omega_i^* = 
+\begin{cases}
+0 & \text{si} \, |\omega_i| \leq \omega^-\\
+\text{sgn}(\omega_i)(\omega^+-\omega^-)^{-1}\omega^+(|\omega_i|-\omega^-) &  \text{si} \,\, \omega^-<|\omega_i| \leq \omega^+ \\
+\omega_i & \text{si} \, |\omega_i| > \omega^+
+\end{cases}$$
+
+
+* Quantile shrinkage is a hard shrinkage method where $\omega^+$ is the $q^{th}$ quantile of the coefficients $|\omega_i|$
+
+
+
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
+## Kalman Filtering
+We assume a simplified model as:
+$$\begin{cases}
+R_t = \mu_t + \sigma_{\zeta}\zeta_t\\
+\mu_t = \mu_{t-1} + \sigma_{\eta}\eta_t
+\end{cases}$$
